@@ -4,7 +4,7 @@
       (function () {
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
-        const message = document.getElmentById('message');
+        const message = document.getElementById('message');
 
         // get the token
         const request = fetch('https://api.planningcenteronline.com/oauth/token', {
