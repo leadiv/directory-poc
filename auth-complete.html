@@ -1,7 +1,7 @@
 <html>
   <head>
     <script>
-      (function () {
+      function getAuthTokens() {
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
         const message = document.getElementById('message');
@@ -38,7 +38,12 @@
               <p>${error}</p>
             `;
           })
-      })();
+      }
+
+      document.addEventListener("DOMContentLoaded", (event) => {
+        getAuthTokens();
+      });
+
     </script>
   </head>
   <body>
