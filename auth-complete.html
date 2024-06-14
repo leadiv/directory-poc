@@ -1,8 +1,49 @@
 <html>
+  <head>
+    <script>
+      (function () {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const message = document.getElmentById('message');
+
+        // get the token
+        const request = fetch('https://api.planningcenteronline.com/oauth/token', {
+          method: 'POST',
+          body: JSON.stringify({
+            grant_type: "authorization_code",
+            code: code,
+            client_id: '1c60b5f9c9c37feedbbfe34ac0014b2b4f17ebfb71cd44bc6b702fd1ecec9d9f',
+            client_secret: '6f0d441577bb8908eaf0fd37d19850a7f9a57f7c91430b306e4ddc9d92169687',
+            redirect_uri: 'https://leadiv.github.io/directory-poc/auth-complete'
+          })
+        })
+
+        request
+          .then((data) => {
+            return data.json();
+          })
+          .then((info) => {
+            window.localStorage.setItem('directoryAuthInfo', info);
+            message.innerHTML = `
+              <h1>Authoritzation Complete!</h1>
+              <p>
+                You can now view the <a href="/directory">directory</a>.
+              </p>
+            `;
+
+          })
+          .catch((error) => {
+            message.innerHTML = `
+              <h1>Authorization Error!</h1>
+              <p>${error}</p>
+            `;
+          })
+      })();
+    </script>
+  </head>
   <body>
-    <h1>Yay Authoritzation Complete!</h1>
-    <p>
-      You can now view the <a href="/directory">directory</a>.
-    </p>
+    <section id="message">
+      <h1>Completing Authoritzation...</h1>
+    </section>
   </body>
 </html>
