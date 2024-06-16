@@ -8,50 +8,30 @@
       // * Address
       // * Email
       // * Phone number
+      const directory = document.getElementById('directory-body');
+
+      directory.innerHTML = 'Directory info will go here';
     }
 
     function startHere() {
 
       const authInfo = window.localStorage.getItem('directoryAuthInfo');
-
+      const authRedirectUrl = "https://api.planningcenteronline.com/oauth/authorize?client_id=1c60b5f9c9c37feedbbfe34ac0014b2b4f17ebfb71cd44bc6b702fd1ecec9d9f&redirect_uri=https://leadiv.github.io/directory-poc/auth-complete&response_type=code&scope=people";
       if (authInfo) {
 
-        const { access_token, expires_in, refresh_token, created_at } = JSON.parse(authInfo);
+        const { access_token, expires_in, created_at } = JSON.parse(authInfo);
 
         if (((created_at + expires_in - 300) * 1000) > Date.now()) {
+
           // we can make requests
           downloadDirectory(access_token);
         } else {
-          // get a refresh
-          const request = fetch('https://api.planningcenteronline.com/oauth/token', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: {
-              client_id: '1c60b5f9c9c37feedbbfe34ac0014b2b4f17ebfb71cd44bc6b702fd1ecec9d9f',
-              client_secret: '6f0d441577bb8908eaf0fd37d19850a7f9a57f7c91430b306e4ddc9d92169687',
-              refresh_token: refresh_token,
-              grant_type: 'refresh_token'
-            }
-          });
 
-          request
-            .then((data) => {
-              return data.text();
-            })
-            .then((info) => {
-              window.localStorage.setItem('directoryAuthInfo', info);
-              
-              const { access_token }  = JSON.parse(window.localStorage.getItem('directoryAuthInfo'));
-            })
-            .then((access_token) => {
-              downloadDirectory(access_token);
-            })
+          window.location.href = authRedirectUrl;
         }
       } else {
 
-        window.location.href = "https://api.planningcenteronline.com/oauth/authorize?client_id=1c60b5f9c9c37feedbbfe34ac0014b2b4f17ebfb71cd44bc6b702fd1ecec9d9f&redirect_uri=https://leadiv.github.io/directory-poc/auth-complete&response_type=code&scope=people";
+        window.location.href = authRedirectUrl;
       }
     }
 
@@ -61,5 +41,6 @@
   </script>
   <body>
     <h1>The directory</h1>
+    <section id="directory-body"></section>
   </body>
 </html>
