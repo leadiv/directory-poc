@@ -1,6 +1,14 @@
 <html>
   <script>
-    function downloadDirectory(access_token) {
+    function requestPeople = (access_token) => (apiEndpoint) => {
+      return fetch(apiEndpoint, {
+        headers: {
+          Authorization: `Bearer ${access_token}`
+        }
+      }).then((response) => response.json());
+    }
+
+    function downloadDirectory(apiRequest) {
       // figure out the correct API call for people.
       // information needed:
       // * Name
@@ -10,7 +18,38 @@
       // * Phone number
       const directory = document.getElementById('directory-body');
 
-      directory.innerHTML = 'Directory info will go here';
+      apiRequest('https://api.planningcenteronline.com/people/v2/people?include=addresses,emails,phone_numbers&per_page=100').then(({ data, included }) => {
+        data.forEach(({ attributes, relationships }) => {
+          const name = attributes.name;
+          const picture = attributes.avatar;
+          const address = relationships.addresses.data.map((item) => {
+            const { city, state, street, zip } = included.find((x) => x.id === item.id).attributes;
+
+            return `${street}, ${city}, ${state} ${zip}`; 
+          });
+          const email = relationships.emails.data.map((email) => {
+            const { address } = included.find((x) => x.id === email.id).attributes;
+
+            return address;
+          });
+          const phoneNumber = relationships.phone_numbers.map((phoneNumber) => {
+            const { number } => included.find((x) => x.id === phoneNumber.id).attributes;
+
+            return number;
+          });
+
+          directory.innerHTML = `
+            ${directory.innerHTML}
+            <ul>
+              <li>name: ${name}</li>
+              <li>picture: ${picture}</li>
+              <li>address: ${address}</li>
+              <li>email: ${email}</li>
+              <li>phone number: ${phoneNumber}</li>
+            </ul>
+          `;
+        })
+      });
     }
 
     function startHere() {
@@ -22,7 +61,7 @@
         const { access_token, expires_in, created_at } = JSON.parse(authInfo);
 
         if (((created_at + expires_in - 300) * 1000) > Date.now()) {
-
+          requestPeopleWithToken = requestPeople(access_token);
           // we can make requests
           downloadDirectory(access_token);
         } else {
