@@ -1,6 +1,6 @@
 <html>
   <script>
-    function requestPeople = (access_token) => (apiEndpoint) => {
+    const requestPeople = (access_token) => (apiEndpoint) => {
       return fetch(apiEndpoint, {
         headers: {
           Authorization: `Bearer ${access_token}`
