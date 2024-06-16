@@ -33,7 +33,7 @@
             return address;
           });
           const phoneNumber = relationships.phone_numbers.map((phoneNumber) => {
-            const { number } => included.find((x) => x.id === phoneNumber.id).attributes;
+            const { number } = included.find((x) => x.id === phoneNumber.id).attributes;
 
             return number;
           });
