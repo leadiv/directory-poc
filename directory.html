@@ -63,7 +63,7 @@
         if (((created_at + expires_in - 300) * 1000) > Date.now()) {
           requestPeopleWithToken = requestPeople(access_token);
           // we can make requests
-          downloadDirectory(access_token);
+          downloadDirectory(requestPeopleWithToken);
         } else {
 
           window.location.href = authRedirectUrl;
