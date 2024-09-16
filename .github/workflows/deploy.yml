@@ -18,8 +18,8 @@ jobs:
         username: ${{ secrets.FTP_DEPLOY_USERNAME }}
         password: ${{ secrets.FTP_DEPLOY_PASSWORD }}
         protocol: ftp 
-        port: 22
+        port: 21
         local-dir: ./app/
-        server-dir: htdocs/
+        server-dir: ./
         dry-run: true
         log-level: verbose
