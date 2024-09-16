@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - pborrego/issues/1/create-deploy-pipeline
+      - main 
 name: Deploy website on push
 jobs:
   web-deploy:
