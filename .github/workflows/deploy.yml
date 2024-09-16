@@ -21,5 +21,3 @@ jobs:
         port: 21
         local-dir: ./app/
         server-dir: ./
-        dry-run: true
-        log-level: verbose
