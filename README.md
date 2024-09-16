@@ -20,4 +20,5 @@ to push files up. If there is a need to test locally the configuration
 do the following:
 
 1. Run `npm install` from the root of this repository.
-2. Use npx to run the ftp-deploy module. The deploy.yml `with` properties for the action should tranalate into function parameters.
+2. Use npx to run the ftp-deploy module. The deploy.yml `with` properties for the action should tranalate into commandline parameters.
+3. Instead of secrets provide the FTP account username and password created to debug.
