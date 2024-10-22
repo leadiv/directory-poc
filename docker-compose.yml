@@ -1,0 +1,8 @@
+name: scripts
+
+services:
+  test:
+    build: .
+    command: ["make", "test"]
+    volumes:
+      - ./scripts:/app/scripts
