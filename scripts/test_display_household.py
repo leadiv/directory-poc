@@ -12,7 +12,7 @@ from display_household import display_household
 '''
 class TestHousehold(unittest.TestCase):
     def test_display_household(self):
-        expected = '<img src=""https://avatars.planningcenteronline.com/uploads/household/6759685-1547489362/avatar.1.jpg" alt="Kocher Household"/>'
+        expected = '<img src="https://avatars.planningcenteronline.com/uploads/household/6759685-1547489362/avatar.1.jpg" alt="Kocher Household"/>'
         actual = display_household(single_household)
 
         self.assertIn(expected, actual, 'it should be able to display the family image')
