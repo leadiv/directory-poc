@@ -6,7 +6,7 @@ def transformHousehold(household):
 
 def createHouseholdHtml(household):
     return ''.join((
-        f'<img src="{household.get('household_image')}" alt="{household.get('household_name')}"/>',
+        f'<img src="{household.get('household_image')}" alt="{household.get('household_name')}"/><br />',
         f'The {household.get('household_name')}<br />'
     ))
 
