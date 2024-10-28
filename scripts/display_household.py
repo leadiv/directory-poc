@@ -5,7 +5,10 @@ def transformHousehold(household):
     }
 
 def createHouseholdHtml(household):
-    return f'<img src="{household.get('household_image')}" alt="{household.get('household_name')}"/>'
+    return ''.join((
+        f'<img src="{household.get('household_image')}" alt="{household.get('household_name')}"/>',
+        f'The {household.get('household_name')}<br />'
+    ))
 
 def display_household(household_json):
     household_data = household_json.get('data', [])
