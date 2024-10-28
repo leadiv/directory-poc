@@ -13,7 +13,7 @@ class TestHousehold(unittest.TestCase):
 
     def test_display_household(self):
         expected = ''.join((
-            '<img src="https://avatars.planningcenteronline.com/uploads/household/6759685-1547489362/avatar.1.jpg" alt="Kocher Household"/>',
+            '<img src="https://avatars.planningcenteronline.com/uploads/household/6759685-1547489362/avatar.1.jpg" alt="Kocher Household"/><br/>',
             'The Kocher Household<br />',
         ))
         actual = display_household(single_household)
