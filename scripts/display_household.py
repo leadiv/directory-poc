@@ -21,7 +21,8 @@ def transform_household(household, people_info):
         'household_image': household.get('attributes', {}).get('avatar'),
         'household_name': household.get('attributes', {}).get('name'),
         'household_members': [
-            transform_person(household.get('attributes', {}).get('primary_contact_id', ''), people_info, True)
+            transform_person(person_ref['id'], people_info, person_ref['id'] == household['attributes']['primary_contact_id']) for person_ref in household['relationships']['people']['data']
+            if person_ref['type'] == 'Person'
         ]
 
     }
@@ -46,7 +47,7 @@ def create_household_html(household):
     return ''.join((
         f'<img src="{household.get('household_image')}" alt="{household.get('household_name')}"/><br/>',
         f'The {household.get('household_name')}<br/>',
-        ''.join([
+        ','.join([
             create_member_html(member) for member in household.get('household_members', [])
             if member
         ])
