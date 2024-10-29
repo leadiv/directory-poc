@@ -37,20 +37,24 @@ def create_member_html(member):
     data_status = f'data-status="{member.get('status')}"'
 
     return ''.join((
+        '<li>',
         f'<img src="{member.get('avatar')}" alt="{member.get('name')}"/>',
         f'<span {data_primary}{data_membership}{data_status}>',
         member.get('name'),
-        '</span>'
+        '</span>,',
+        '</li>'
     ))
 
 def create_household_html(household):
     return ''.join((
         f'<img src="{household.get('household_image')}" alt="{household.get('household_name')}"/><br/>',
-        f'The {household.get('household_name')}<br/>',
-        ','.join([
+        f'<h2>The {household.get('household_name')}</h2>',
+        '<ul>',
+        ''.join([
             create_member_html(member) for member in household.get('household_members', [])
             if member
-        ])
+        ]),
+        '</ul>'
     ))
 
 def display_household(household_json):
