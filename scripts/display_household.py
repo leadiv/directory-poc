@@ -1,27 +1,31 @@
 def transform_person(id, people_info, is_primary):
     person_found = [
         info for info in people_info
-        if info.get('id', '') == id
+        if info['id'] == id
     ]
 
     try:
+        attributes = person_found[0]['attributes']
+
         return {
-            'avatar': person_found[0].get('attributes', {}).get('avatar', ''),
-            'name': person_found[0].get('attributes', {}).get('name', ''),
+            'avatar': attributes['avatar'],
+            'name': attributes['name'],
             'is_primary': is_primary,
-            'membership': person_found[0].get('attributes', {}).get('membership', ''),
-            'status': person_found[0].get('attributes', {}).get('status', ''),
+            'membership': attributes['membership'],
+            'status': attributes['status'],
         }
 
     except:
         return None
 
 def transform_household(household, people_info):
+    attributes = household['attributes']
+
     return {
-        'household_image': household.get('attributes', {}).get('avatar'),
-        'household_name': household.get('attributes', {}).get('name'),
+        'household_image': attributes['avatar'],
+        'household_name': attributes['name'],
         'household_members': [
-            transform_person(person_ref['id'], people_info, person_ref['id'] == household['attributes']['primary_contact_id']) for person_ref in household['relationships']['people']['data']
+            transform_person(person_ref['id'], people_info, person_ref['id'] == attributes['primary_contact_id']) for person_ref in household['relationships']['people']['data']
             if person_ref['type'] == 'Person'
         ]
 
