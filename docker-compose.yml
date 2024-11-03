@@ -6,3 +6,8 @@ services:
     command: ["make", "test"]
     volumes:
       - ./scripts:/app/scripts
+  display_households:
+    build: .
+    command: ["python", "/app/scripts/households-list.py"]
+    volumes:
+      - ./scripts:/app/scripts
