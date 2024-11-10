@@ -59,6 +59,19 @@ def _create_household_html(household):
         '</ul>'
     ))
 
+def _is_include_in_the_online_pictorial_directory_field(field_datum):
+    FIELD_DEFINITION_ID = '830513'
+
+    is_associated_with_person = field_datum['relationships']['customizable']['data']['type'] == 'Person'
+    is_field_definition = field_datum['relationships']['field_definition']['data']['type'] == 'FieldDefinition'
+    is_correct_field = field_datum['relationships']['field_definition']['data']['id'] == FIELD_DEFINITION_ID
+
+    return is_associated_with_person and is_field_definition and is_correct_field
+
+def _get_person_id_from_field_datum(field_datum):
+    return field_datum['relationships']['customizable']['data']['id']
+
+
 def display_household(household_json, allowed_people):
     household_data = household_json.get('data', [])
     household_people = [
@@ -78,4 +91,9 @@ def get_people_links(household_json):
     ]
 
 def get_allowed_people(api_json):
-    pass
+    included = api_json['included']
+
+    return [
+        _get_person_id_from_field_datum(field_datum) for field_datum in included
+        if _is_include_in_the_online_pictorial_directory_field(field_datum)
+    ] 
