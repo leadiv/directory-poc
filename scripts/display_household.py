@@ -11,7 +11,6 @@ def transform_person(id, people_info, is_primary):
             'avatar': attributes['avatar'],
             'name': attributes['name'],
             'is_primary': is_primary,
-            'membership': attributes['membership'],
             'status': attributes['status'],
         }
 
@@ -37,7 +36,6 @@ def create_member_html(member, is_last_member):
     else:
         data_primary = ''
 
-    data_membership = f'data-membership="{member.get('membership')}" '
     data_status = f'data-status="{member.get('status')}"'
 
     if is_last_member:
@@ -48,7 +46,7 @@ def create_member_html(member, is_last_member):
     return ''.join((
         '<li>',
         f'<img src="{member.get('avatar')}" alt="{member.get('name')}"/>',
-        f'<span {data_primary}{data_membership}{data_status}>',
+        f'<span {data_primary}{data_status}>',
         member.get('name'),
         f'</span>{separator}',
         '</li>'
