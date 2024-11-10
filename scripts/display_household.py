@@ -1,4 +1,4 @@
-def transform_person(id, people_info, is_primary):
+def transform_person(id, people_info):
     person_found = [
         info for info in people_info
         if info['id'] == id
@@ -10,7 +10,6 @@ def transform_person(id, people_info, is_primary):
         return {
             'avatar': attributes['avatar'],
             'name': attributes['name'],
-            'is_primary': is_primary,
         }
 
     except:
@@ -23,18 +22,13 @@ def transform_household(household, people_info):
         'household_image': attributes['avatar'],
         'household_name': attributes['name'],
         'household_members': [
-            transform_person(person_ref['id'], people_info, person_ref['id'] == attributes['primary_contact_id']) for person_ref in household['relationships']['people']['data']
+            transform_person(person_ref['id'], people_info) for person_ref in household['relationships']['people']['data']
             if person_ref['type'] == 'Person'
         ]
 
     }
 
 def create_member_html(member, is_last_member):
-    if member.get('is_primary'):
-        data_primary = f' data-primary'
-    else:
-        data_primary = ''
-
     if is_last_member:
         separator = ''
     else:
@@ -43,7 +37,7 @@ def create_member_html(member, is_last_member):
     return ''.join((
         '<li>',
         f'<img src="{member.get('avatar')}" alt="{member.get('name')}"/>',
-        f'<span{data_primary}>',
+        f'<span>',
         member.get('name'),
         f'</span>{separator}',
         '</li>'
