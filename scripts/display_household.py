@@ -30,13 +30,7 @@ def _transform_household(household, people_info):
     }
 
 def _should_use_separator(index, total):
-    if total > 1:
-        if index != total - 1:
-            return False
-        else:
-            return True
-    else:
-        return False
+    return (total > 1) and (index == total - 1)
 
 def _create_member_html(member, index, total_household):
     if _should_use_separator(index, total_household):
