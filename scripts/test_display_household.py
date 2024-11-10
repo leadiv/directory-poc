@@ -2,6 +2,8 @@ import unittest
 
 from mock_household import single_household
 from display_household import display_household
+from display_household import get_people_links
+
 
 class TestHousehold(unittest.TestCase):
 
@@ -35,6 +37,16 @@ class TestHousehold(unittest.TestCase):
         actual = display_household(single_household, ['36729400', '49166778', '49657796', '76460632'])
 
         self.assertEqual(expected, actual, 'it should be able to display multiple amily members as HTML')
+
+class TestPeopleLinks(unittest.TestCase):
+
+    def test_household(self):
+        self.maxDiff = None
+
+        expected = 'https://api.planningcenteronline.com/people/v2/households/6759685/people?include=field_definitions'
+        actual = get_people_links(single_household)
+
+        self.assertEqual(expected, actual, 'it should return the API links for the people related to the household')
 
 if __name__ == '__main__':
     unittest.main()

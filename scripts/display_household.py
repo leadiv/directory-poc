@@ -71,3 +71,6 @@ def display_household(household_json, allowed_people):
     html = [_create_household_html(household) for household in household_info]
 
     return ''.join(html)
+
+def get_people_links(household_json):
+    pass
