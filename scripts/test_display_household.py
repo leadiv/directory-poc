@@ -15,7 +15,7 @@ class TestHousehold(unittest.TestCase):
             '<li><img src="https://avatars.planningcenteronline.com/uploads/person/36729400-1524683747/avatar.2.jpeg" alt="Rob Kocher"/><span>Rob Kocher</span></li>',
             '</ul>'
         ))
-        actual = display_household(single_household)
+        actual = display_household(single_household, ['36729400'])
 
         self.assertEqual(expected, actual, 'it should be able to display the family household as HTML')
 
