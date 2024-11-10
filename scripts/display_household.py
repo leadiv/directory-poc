@@ -73,4 +73,6 @@ def display_household(household_json, allowed_people):
     return ''.join(html)
 
 def get_people_links(household_json):
-    pass
+    return [
+        f"{household['relationships']['people']['links']['related']}?include=field_definitions" for household in household_json['data']
+    ]
