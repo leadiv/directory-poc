@@ -11,7 +11,6 @@ def transform_person(id, people_info, is_primary):
             'avatar': attributes['avatar'],
             'name': attributes['name'],
             'is_primary': is_primary,
-            'status': attributes['status'],
         }
 
     except:
@@ -32,11 +31,9 @@ def transform_household(household, people_info):
 
 def create_member_html(member, is_last_member):
     if member.get('is_primary'):
-        data_primary = f'data-primary '
+        data_primary = f' data-primary'
     else:
         data_primary = ''
-
-    data_status = f'data-status="{member.get('status')}"'
 
     if is_last_member:
         separator = ''
@@ -46,7 +43,7 @@ def create_member_html(member, is_last_member):
     return ''.join((
         '<li>',
         f'<img src="{member.get('avatar')}" alt="{member.get('name')}"/>',
-        f'<span {data_primary}{data_status}>',
+        f'<span{data_primary}>',
         member.get('name'),
         f'</span>{separator}',
         '</li>'
