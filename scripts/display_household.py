@@ -76,3 +76,6 @@ def get_people_links(household_json):
     return [
         f"{household['relationships']['people']['links']['related']}?include=field_definitions" for household in household_json['data']
     ]
+
+def get_allowed_people(api_json):
+    pass

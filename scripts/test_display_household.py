@@ -1,8 +1,11 @@
 import unittest
 
 from mock_household import single_household
+from mock_household import households_people
+
 from display_household import display_household
 from display_household import get_people_links
+from display_household import get_allowed_people
 
 
 class TestHousehold(unittest.TestCase):
@@ -40,13 +43,24 @@ class TestHousehold(unittest.TestCase):
 
 class TestPeopleLinks(unittest.TestCase):
 
-    def test_household(self):
+    def test_get_people_links(self):
         self.maxDiff = None
 
         expected = ['https://api.planningcenteronline.com/people/v2/households/6759685/people?include=field_definitions']
         actual = get_people_links(single_household)
 
         self.assertEqual(expected, actual, 'it should return the API links for the people related to the household')
+
+class TestAllowedPeople(unittest.TestCase):
+
+    def test_get_allowed_people(self):
+        self.maxDiff = None
+
+        expected = ['36729400']
+        actual = get_allowed_people(households_people)
+
+        self.assertEqual(expected, actual, 'it should be able to return a list of people IDs that are allowed to be shown on the online directory')
+
 
 if __name__ == '__main__':
     unittest.main()
