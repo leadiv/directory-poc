@@ -21,7 +21,7 @@ def _transform_household(household, people_info):
     return {
         'household_image': attributes['avatar'],
         'household_name': attributes['name'],
-        'household_count': attributes['member_count'],
+        'household_allowed_count': len(people_info),
         'household_members': [
             _transform_person(person_ref['id'], people_info) for person_ref in household['relationships']['people']['data']
             if person_ref['type'] == 'Person'
@@ -30,7 +30,7 @@ def _transform_household(household, people_info):
     }
 
 def _should_use_separator(index, total):
-    return (total > 1) and (index == total - 1)
+    return (total > 1) and (index != total - 1)
 
 def _create_member_html(member, index, total_household):
     if _should_use_separator(index, total_household):
@@ -53,7 +53,7 @@ def _create_household_html(household):
         f'<h2>The {household.get('household_name')}</h2>',
         '<ul>',
         ''.join([
-            _create_member_html(member, index, household.get('household_count')) for index, member in enumerate(household.get('household_members', []))
+            _create_member_html(member, index, household.get('household_allowed_count')) for index, member in enumerate(household.get('household_members', []))
             if member
         ]),
         '</ul>'
