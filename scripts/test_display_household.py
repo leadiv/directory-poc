@@ -47,7 +47,7 @@ class TestPeopleLinks(unittest.TestCase):
     def test_get_people_links(self):
         self.maxDiff = None
 
-        expected = ['https://api.planningcenteronline.com/people/v2/households/6759685/people?include=field_definitions']
+        expected = ['https://api.planningcenteronline.com/people/v2/households/6759685/people?include=field_data']
         actual = get_people_links(single_household)
 
         self.assertEqual(expected, actual, 'it should return the API links for the people related to the household')
@@ -60,7 +60,7 @@ class TestAllowedPeopleList(unittest.TestCase):
         mock_api_call = MagicMock(side_effect=[households_people])
 
         expected = ['36729400']
-        actual = get_allowed_people_list(['https://api.planningcenteronline.com/people/v2/households/6759685/people?include=field_definitions'], mock_api_call)
+        actual = get_allowed_people_list(['https://api.planningcenteronline.com/people/v2/households/6759685/people?include=field_data'], mock_api_call)
 
         self.assertEqual(expected, actual, 'it should return a list of all peopel IDs that are allowed to be shown on the online directory from the list of API calls')
 
