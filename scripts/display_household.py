@@ -95,7 +95,7 @@ def display_household(household_json, allowed_people):
 
 def get_people_links(household_json):
     return [
-        f"{household['relationships']['people']['links']['related']}?include=field_definitions" for household in household_json['data']
+        f"{household['relationships']['people']['links']['related']}?include=field_data" for household in household_json['data']
     ]
 
 def get_allowed_people_list(api_links, api_call):
