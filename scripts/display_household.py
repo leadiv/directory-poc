@@ -71,6 +71,14 @@ def _is_include_in_the_online_pictorial_directory_field(field_datum):
 def _get_person_id_from_field_datum(field_datum):
     return field_datum['relationships']['customizable']['data']['id']
 
+def _get_allowed_people(api_json):
+    included = api_json['included']
+
+    return [
+        _get_person_id_from_field_datum(field_datum) for field_datum in included
+        if _is_include_in_the_online_pictorial_directory_field(field_datum)
+    ] 
+
 
 def display_household(household_json, allowed_people):
     household_data = household_json.get('data', [])
@@ -90,10 +98,11 @@ def get_people_links(household_json):
         f"{household['relationships']['people']['links']['related']}?include=field_definitions" for household in household_json['data']
     ]
 
-def get_allowed_people(api_json):
-    included = api_json['included']
+def get_allowed_people_list(api_links, api_call):
+    white_list = []
+    for api_link in api_links:
+        results = api_call(api_link)
+        white_list.extend(_get_allowed_people(results))
 
-    return [
-        _get_person_id_from_field_datum(field_datum) for field_datum in included
-        if _is_include_in_the_online_pictorial_directory_field(field_datum)
-    ] 
+    return white_list
+
