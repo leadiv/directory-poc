@@ -49,8 +49,8 @@ def _create_member_html(member, index, total_household):
 
 def _create_household_html(household):
     return ''.join((
-        f'<img src="{household.get('household_image')}" alt="{household.get('household_name')}"/>',
         f'<h2>The {household.get('household_name')}</h2>',
+        f'<img src="{household.get('household_image')}" alt="{household.get('household_name')}"/>',
         '<ul>',
         ''.join([
             _create_member_html(member, index, household.get('household_allowed_count')) for index, member in enumerate(household.get('household_members', []))
