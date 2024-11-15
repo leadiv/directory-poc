@@ -49,6 +49,7 @@ def _create_member_html(member, index, total_household):
 
 def _create_household_html(household):
     return ''.join((
+        '<article class="directory-household">',
         f'<h2>The {household.get('household_name')}</h2>',
         f'<img src="{household.get('household_image')}" alt="{household.get('household_name')}"/>',
         '<ul>',
@@ -56,7 +57,8 @@ def _create_household_html(household):
             _create_member_html(member, index, household.get('household_allowed_count')) for index, member in enumerate(household.get('household_members', []))
             if member
         ]),
-        '</ul>'
+        '</ul>',
+        '</article>',
     ))
 
 def _is_include_in_the_online_pictorial_directory_field(field_datum):

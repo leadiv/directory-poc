@@ -15,7 +15,7 @@ class TestHousehold(unittest.TestCase):
         self.maxDiff = None
 
         expected = ''.join((
-            '<article class="directory-houshold">',
+            '<article class="directory-household">',
             '<h2>The Kocher Household</h2>',
             '<img src="https://avatars.planningcenteronline.com/uploads/household/6759685-1547489362/avatar.1.jpg" alt="Kocher Household"/>',
             '<ul>',
@@ -31,7 +31,7 @@ class TestHousehold(unittest.TestCase):
         self.maxDiff = None
 
         expected = ''.join((
-            '<article class="directory-houshold">',
+            '<article class="directory-household">',
             '<h2>The Kocher Household</h2>',
             '<img src="https://avatars.planningcenteronline.com/uploads/household/6759685-1547489362/avatar.1.jpg" alt="Kocher Household"/>',
             '<ul>',
