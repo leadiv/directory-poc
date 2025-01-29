@@ -1,6 +1,18 @@
 # directory-poc
 A proof of concept for using Planning Center for a read only directory
 
+## Running households-list script
+The households-list script creates the online directory from Planning Center.
+
+Ensure that a .env file is created and sets the PCO_USERNAME and PCO_PASSWORD from the PAT created on your account.
+
+Then run the following
+```
+source ./.env
+cd scripts
+docker-compose run display_households python /app/scripts/households-list.py -u $PCO_USERNAME -p $PCO_PASSWORD
+```
+
 ## FTP Information
 The username, and the ftp host server can be found on the hosting admin
 pages. If these are updated be sure to update the repository secrets as
