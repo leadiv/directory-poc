@@ -1,56 +1,29 @@
 <html>
   <script>
-    const requestPeople = (access_token) => (apiEndpoint) => {
+    const MAX_RETRY = 3;
+
+    const requestPeople = (access_token) => (apiEndpoint, retryCount = 1) => {
       return fetch(apiEndpoint, {
         headers: {
           Authorization: `Bearer ${access_token}`
         }
-      }).then((response) => response.json());
+      }).then((response) => response.json()).catch((error) => {
+        if (retryCount <= MAX_RETRY) {
+          return window.directoryPOC.apiRequest(apiEndpoint, retryCount + 1);
+        } else {
+          throw new Error(`MAX RETRY of ${MAX_RETRY} has been reached. Stopping due to: ${error}`);
+        }
+      });
     }
 
-    function downloadNextPage(nextEndpoint) {
-      const directory = document.getElementById('directory-body');
+    function requestFirstPageOfHouseholds() {
+      window.directoryPOC.apiRequest('https://api.planningcenteronline.com/people/v2/households?include=people&per_page=1').then((json_results) => {
+        console.log('The results', json_results);
+      }
+    }
 
-      window.directoryPOC.apiRequest(nextEndpoint).then(({ links, data, included }) => {
-        data.forEach(({ attributes, relationships }) => {
-          const name = attributes.name;
-          const picture = attributes.avatar;
-          const address = relationships.addresses.data.map((item) => {
-            const { city, state, street, zip } = included.find((x) => x.id === item.id).attributes;
-
-            return `${street}, ${city}, ${state} ${zip}`; 
-          });
-          const email = relationships.emails.data.map((email) => {
-            const { address } = included.find((x) => x.id === email.id).attributes;
-
-            return address;
-          });
-          const phoneNumber = relationships.phone_numbers.data.map((phoneNumber) => {
-            const { number } = included.find((x) => x.id === phoneNumber.id).attributes;
-
-            return number;
-          });
-
-          directory.innerHTML += `
-            <ul>
-              <li>name: ${name}</li>
-              <li>picture: ${picture}</li>
-              <li>address: ${address}</li>
-              <li>email: ${email}</li>
-              <li>phone number: ${phoneNumber}</li>
-            </ul>
-          `;
-        })
-
-        const nav = document.getElementById('directory-nav');
-        nav.innerHTML = '<ul>';
-
-        if (links.next) {
-          nav.innerHTML += `<li><a href="javascript:downloadNextPage('${links.next}')">Next</a></li>`
-        }
-
-        nav.innerHTML += '</ul>';
-      });
+    function displayHouseholds() {
+        requestFirstPageOfHouseholds();
     }
 
     function startHere() {
@@ -66,7 +39,7 @@
             apiRequest: requestPeople(access_token)
           };
 
-          downloadNextPage('https://api.planningcenteronline.com/people/v2/people?include=addresses,emails,phone_numbers&per_page=100');
+          displayHouseholds();
         } else {
 
           window.location.href = authRedirectUrl;
@@ -82,7 +55,6 @@
     });
   </script>
   <body>
-    <h1>The directory</h1>
     <section id="directory-body"></section>
     <section id="directory-nav"></section>
   </body>
