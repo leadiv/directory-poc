@@ -1,17 +1,16 @@
 <html>
   <script>
-    const MAX_RETRY = 3;
-
-    const requestPeople = (access_token) => (apiEndpoint, retryCount = 1) => {
+    // PCO = Planning Center Online
+    const requestPCO = (access_token) => (apiEndpoint, retryCount = 1) => {
       return fetch(apiEndpoint, {
         headers: {
           Authorization: `Bearer ${access_token}`
         }
       }).then((response) => response.json()).catch((error) => {
-        if (retryCount <= MAX_RETRY) {
+        if (retryCount <= window.directoryPOC.MAX_RETRY) {
           return window.directoryPOC.apiRequest(apiEndpoint, retryCount + 1);
         } else {
-          throw new Error(`MAX RETRY of ${MAX_RETRY} has been reached. Stopping due to: ${error}`);
+          throw new Error(`MAX RETRY of ${window.directoryPOC.MAX_RETRY} has been reached. Stopping due to: ${error}`);
         }
       });
     }
@@ -36,7 +35,8 @@
 
         if (((created_at + expires_in - 300) * 1000) > Date.now()) {
           window.directoryPOC = {
-            apiRequest: requestPeople(access_token)
+            MAX_RETRY: 3,
+            apiRequest: requestPCO(access_token)
           };
 
           displayHouseholds();
