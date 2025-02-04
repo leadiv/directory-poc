@@ -24,7 +24,7 @@
       });
     }
 
-    function getPeopleLinks({ data=[] }) {
+    function getPeopleLinks({ data }) {
       return data.map(({ relationships: { people: { links: { related } } } }) => `${related}?include=field_data`);
     }
 
