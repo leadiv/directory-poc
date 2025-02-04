@@ -29,8 +29,10 @@
     }
 
     function requestFirstPageOfHouseholds() {
-      return window.directoryPOC.apiRequest('https://api.planningcenteronline.com/people/v2/households?include=people&per_page=1').then((json_results) => {
-        console.log('The results', json_results);
+      return window.directoryPOC.apiRequest('https://api.planningcenteronline.com/people/v2/households?include=people&per_page=1').then((jsonResults) => {
+        console.log('The results', jsonResults);
+
+        return jsonResults;
       });
     }
 
