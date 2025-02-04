@@ -1,5 +1,14 @@
 <html>
   <script>
+    const backoff = (retryCount) => {
+      return new Promise((resolve, reject) => {
+          const backoffTime = Math.floor(Math.random() * Math.pow(2, retryCount - 1) * 1000);
+        setTimeout(() => {
+          resolve(backoffTime);
+        }, backoffTime);
+      });
+    };
+
     // PCO = Planning Center Online
     const requestPCO = (access_token) => (apiEndpoint, retryCount = 1) => {
       return fetch(apiEndpoint, {
@@ -8,7 +17,7 @@
         }
       }).then((response) => response.json()).catch((error) => {
         if (retryCount <= window.directoryPOC.MAX_RETRY) {
-          return window.directoryPOC.apiRequest(apiEndpoint, retryCount + 1);
+          return backoff(retryCount).then(() => window.directoryPOC.apiRequest(apiEndpoint, retryCount + 1));
         } else {
           throw new Error(`MAX RETRY of ${window.directoryPOC.MAX_RETRY} has been reached. Stopping due to: ${error}`);
         }
