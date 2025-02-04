@@ -24,6 +24,10 @@
       });
     }
 
+    function getPeopleLinks({ data=[] }) {
+      return data.map(({ relationships: { people: { links: { related } } } }) => `${related}?include=field_data`);
+    }
+
     function requestFirstPageOfHouseholds() {
       return window.directoryPOC.apiRequest('https://api.planningcenteronline.com/people/v2/households?include=people&per_page=1').then((json_results) => {
         console.log('The results', json_results);
@@ -31,7 +35,11 @@
     }
 
     function displayHouseholds() {
-        requestFirstPageOfHouseholds();
+      requestFirstPageOfHouseholds()
+        .then((jsonResults) => getPeopleLinks(jsonResults))
+        .then((peopleLinks) => {
+          console.log('api links ready:', peopleLinks);
+        });
     }
 
     function startHere() {
