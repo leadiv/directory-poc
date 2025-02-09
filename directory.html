@@ -1,9 +1,9 @@
 <html>
   <script>
-    const tap = (getMessage) => (passthrough) => {
+    const tap = (getMessage) => (passThrough) => {
       console.log(getMessage(passThrough));
 
-      return passthrough;
+      return passThrough;
     };
 
     const backoff = (retryCount) => {
