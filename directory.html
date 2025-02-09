@@ -1,5 +1,11 @@
 <html>
   <script>
+    const tap = (getMessage) => (passthrough) => {
+      console.log(getMessage(passThrough));
+
+      return passthrough;
+    };
+
     const backoff = (retryCount) => {
       return new Promise((resolve, reject) => {
           const backoffTime = Math.floor(Math.random() * Math.pow(2, retryCount - 1) * 1000);
@@ -29,19 +35,70 @@
     }
 
     function requestFirstPageOfHouseholds() {
-      return window.directoryPOC.apiRequest('https://api.planningcenteronline.com/people/v2/households?include=people&per_page=1').then((jsonResults) => {
-        console.log('The results', jsonResults);
+      return window.directoryPOC.apiRequest('https://api.planningcenteronline.com/people/v2/households?include=people&per_page=1');
+    }
 
-        return jsonResults;
+    function _isIncludeInTheOnlinePictorialDirectoryField(fieldDatum) {
+      const FIELD_DEFINITION_ID = '830513';
+      const {
+        relationships: {
+          customizable: {
+            data: {
+              type: customizableType
+            }
+          },
+          field_definition: {
+            data: {
+              id
+              type: fieldDefinitionType
+            }
+          }
+        }
+      } = fieldDatum;
+
+      return customizableType === 'Person' && fieldDefinitionType === 'FieldDefinition' && id === FIELD_DEFINITION_ID;
+    }
+
+    function _getPersonIdFromFieldDatum(fieldDatum) {
+      const {
+        relationships: {
+          customizable: {
+            data: {
+              id
+            }
+          }
+        }
+      } = fieldDatum;
+
+      return id;
+    }
+
+    function _getAllowedPeople({ included }) {
+      return included
+        .filter(_isIncludeInTheOnlinePictorialDirectoryField)
+        .map(_getPersonIdFromFieldDatum);
+    }
+
+    function getAllowedPeopleList(apiLinks, apiCall) {
+      return Promise.all(apiLinks.map((apiLink) => {
+        return apiCall(apiLink).catch((error) => {
+          console.warn(`caught this error while trying to reach ${apiLink}. A null will be return as the result. Should look into why this error is happening ${error}`);
+          return null;
+        });
+      })).then((results) => {
+        return results
+          .filter((item) => item !== null)
+          .flatMap(_getAllowedPeople)
       });
     }
 
     function displayHouseholds() {
       requestFirstPageOfHouseholds()
+        .then(tap((x) => `inital call to household: ${x}`))
         .then((jsonResults) => getPeopleLinks(jsonResults))
-        .then((peopleLinks) => {
-          console.log('api links ready:', peopleLinks);
-        });
+        .then(tap((x) => `api links ready: ${x}`))
+        .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest))
+        .then(tap((x) => `white listed people ids: ${x}`));
     }
 
     function startHere() {
