@@ -92,13 +92,117 @@
       });
     }
 
+    function _shouldUseSeparator(index, total) {
+      return (total > 1) && (index !== total -1);
+
+    function _createMemberHtml(member, index, totalHousehold) {
+      const separator = _shouldUseSeparator(index, totalHousehold) ? ',' : '';
+
+      return [
+        '<li>',
+        `<img src="${member.avatar}" alt="${member.name}"/>`,
+        '<span>',
+        member.name,
+        `</span>${separator}`,
+        '</li>'
+      ].join('');
+    }
+
+    def _create_member_html(member, index, total_household):
+    if _should_use_separator(index, total_household):
+        separator = ','
+    else:
+        separator = ''
+
+    return ''.join((
+        '<li>',
+        f'<img src="{member.get('avatar')}" alt="{member.get('name')}"/>',
+        f'<span>',
+        member.get('name'),
+        f'</span>{separator}',
+        '</li>'
+    ))
+
+    function _createHouseholdHtml(household) {
+      const householdMembers = household?.householdMembers || [];
+
+      return [
+        '<article class="directory-household">',
+        `<h2>The ${household.householdName}</h2>`,
+        `<img src="${household.householdImage}" alt="${household.householdName}"/>`,
+        '<ul>',
+        householdMembers.map((member, index) => _createMemberHtml(member, index, household.householdAllowedCount)).join(''),
+        '</ul>',
+        '</article>'
+      ].join('');
+    }
+
+    def _create_household_html(household):
+    return ''.join((
+        '<article class="directory-household">',
+        f'<h2>The {household.get('household_name')}</h2>',
+        f'<img src="{household.get('household_image')}" alt="{household.get('household_name')}"/>',
+        '<ul>',
+        ''.join([
+            _create_member_html(member, index, household.get('household_allowed_count')) for index, member in enumerate(household.get('household_members', []))
+            if member
+        ]),
+        '</ul>',
+        '</article>',
+    ))
+
+    function _transformPerson(id, peopleInfo) {
+      const personFound = peopleInfo.find((info) => info.id === id);
+
+      try {
+        const attributes = personFound.attributes;
+
+        return {
+          avatar: attributes.avatar,
+          name: attributes.name
+        };
+      } catch(error) {
+        return null;
+      }
+    }
+
+    function _transformHousehold(household, peopleInfo) {
+      const attributes = household.attributes;
+
+      return {
+        householdImage: attributes.avatar,
+        householdName: attributes.name,
+        householdAllowedCount: peopleInfo.length,
+        householdMembers: household.relationships.people.data
+          .filter((personRef) => personRef.type === 'Person')
+          .map((personRef) => {
+            return _transformPerson(personRef.id, peopleInfo);
+          })
+      };
+    }
+
+    function displayHousehold(householdJson, allowedPeople) {
+      const householdData = householdJson.data || [];
+      const householdPeople = householdJson.included.filter((person) => {
+        return !!allowedPeople.find((allowed) => allowed === person.id)
+      });
+
+      const householdInfo = householdData.map((household) => _transformHousehold(household, householdPeople));
+      const html = householdInfo.map((household) => _createHouseholdHtml(household)).join('');
+
+      document.getElementById('directory-body').innerHTML = html;
+    }
+
     function displayHouseholds() {
-      requestFirstPageOfHouseholds()
-        .then(tap((x) => `inital call to household: ${x}`))
+      const householdJson = requestFirstPageOfHouseholds();
+      const allowedPeople = householdJson
+        .then(tap((x) => `inital call to household: ${JSON.stringify(x)}`))
         .then((jsonResults) => getPeopleLinks(jsonResults))
         .then(tap((x) => `api links ready: ${x}`))
         .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest))
         .then(tap((x) => `white listed people ids: ${x}`));
+
+      return Promise.all(householdJson, allowedPeople).then(displayHousehold);
     }
 
     function startHere() {
