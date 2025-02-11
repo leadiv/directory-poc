@@ -153,7 +153,7 @@
       };
     }
 
-    function displayHousehold(householdJson, allowedPeople) {
+    function displayHousehold([ householdJson, allowedPeople ]) {
       const householdData = householdJson.data || [];
       const householdPeople = householdJson.included.filter((person) => {
         return !!allowedPeople.find((allowed) => allowed === person.id)
@@ -174,7 +174,7 @@
         .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest))
         .then(tap((x) => `white listed people ids: ${x}`));
 
-      return Promise.all(householdJson, allowedPeople).then(displayHousehold);
+      return Promise.all([householdJson, allowedPeople]).then(displayHousehold);
     }
 
     function startHere() {
