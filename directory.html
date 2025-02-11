@@ -108,21 +108,6 @@
       ].join('');
     }
 
-    def _create_member_html(member, index, total_household):
-    if _should_use_separator(index, total_household):
-        separator = ','
-    else:
-        separator = ''
-
-    return ''.join((
-        '<li>',
-        f'<img src="{member.get('avatar')}" alt="{member.get('name')}"/>',
-        f'<span>',
-        member.get('name'),
-        f'</span>{separator}',
-        '</li>'
-    ))
-
     function _createHouseholdHtml(household) {
       const householdMembers = household?.householdMembers || [];
 
@@ -136,20 +121,6 @@
         '</article>'
       ].join('');
     }
-
-    def _create_household_html(household):
-    return ''.join((
-        '<article class="directory-household">',
-        f'<h2>The {household.get('household_name')}</h2>',
-        f'<img src="{household.get('household_image')}" alt="{household.get('household_name')}"/>',
-        '<ul>',
-        ''.join([
-            _create_member_html(member, index, household.get('household_allowed_count')) for index, member in enumerate(household.get('household_members', []))
-            if member
-        ]),
-        '</ul>',
-        '</article>',
-    ))
 
     function _transformPerson(id, peopleInfo) {
       const personFound = peopleInfo.find((info) => info.id === id);
