@@ -117,7 +117,9 @@
         `<h2>The ${household.householdName}</h2>`,
         `<img src="${household.householdImage}" alt="${household.householdName}"/>`,
         '<ul>',
-        householdMembers.map((member, index) => _createMemberHtml(member, index, household.householdAllowedCount)).join(''),
+        householdMembers
+          .filter((member) => !!member)
+          .map((member, index) => _createMemberHtml(member, index, household.householdAllowedCount)).join(''),
         '</ul>',
         '</article>'
       ].join('');
