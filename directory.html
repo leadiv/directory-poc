@@ -94,6 +94,7 @@
 
     function _shouldUseSeparator(index, total) {
       return (total > 1) && (index !== total -1);
+    }
 
     function _createMemberHtml(member, index, totalHousehold) {
       const separator = _shouldUseSeparator(index, totalHousehold) ? ',' : '';
