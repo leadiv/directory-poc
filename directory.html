@@ -1,4 +1,35 @@
 <html>
+  <style>
+    body > * + * {
+      margin-top: 2rem;
+    }
+    section {
+      max-width: 50rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    ul {
+      margin: 0;
+      list-style-type: none;
+      padding:0;
+    }
+
+    li {
+      display: grid;
+      grid-template-rows: repeat(5, 2rem);
+      grid-template-columns: repeat(5, 1fr);
+      grid-column-gap: .75rem;
+      grid-row-gap: .75rem;
+    }
+
+    .directory__title {
+      grid-area: 1 / 1 / 2 / 5;
+    }
+    .directory__body {
+      grid-area: 2 / 1 / 6 / 5;
+    }
+  </style>
   <script>
     const tap = (getMessage) => (passThrough) => {
       console.log(getMessage(passThrough));
@@ -171,8 +202,8 @@
 
         return [
           '<li>',
-          `<textarea id="directory-title-${index}" readonly>${title}</textarea><button>Copy</button>`,
-          `<textarea id="directory-body-${index}" readonly>${body}</textarea><button>Copy</button>`,
+          `<textarea id="directory-title-${index}" class="directory__title" readonly>${title}</textarea><button data-for="directory-title-${index}">Copy</button>`,
+          `<textarea id="directory-body-${index}" class="directory__body" readonly>${body}</textarea><button data-for="directory-body-${index}">Copy</button>`,
           '</li>'
         ];
       }).join('');
@@ -183,11 +214,8 @@
     function displayHouseholds() {
       const householdJson = requestFirstPageOfHouseholds();
       const allowedPeople = householdJson
-        .then(tap((x) => `inital call to household: ${JSON.stringify(x)}`))
         .then((jsonResults) => getPeopleLinks(jsonResults))
-        .then(tap((x) => `api links ready: ${x}`))
-        .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest))
-        .then(tap((x) => `white listed people ids: ${x}`));
+        .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest));
 
       return Promise.all([householdJson, allowedPeople]).then(displayHousehold);
     }
@@ -222,6 +250,7 @@
     });
   </script>
   <body>
+    <h1>Directory Update Tool</h1>
     <section class="directory-controls">
       <input id="directory-query"/>
       <button>Query</button>
