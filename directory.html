@@ -166,7 +166,7 @@
       });
 
       const householdInfo = householdData.map((household) => _transformHousehold(household, householdPeople));
-      const html = householdInfo.flatMap((household) => {
+      const html = householdInfo.flatMap((household, index) => {
         const { title, body } = _createHouseholdHtml(household);
 
         return [
