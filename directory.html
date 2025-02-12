@@ -112,17 +112,21 @@
     function _createHouseholdHtml(household) {
       const householdMembers = household?.householdMembers || [];
 
-      return [
-        '<article class="directory-household">',
-        `<h2>The ${household.householdName}</h2>`,
-        `<img src="${household.householdImage}" alt="${household.householdName}"/>`,
-        '<ul>',
-        householdMembers
-          .filter((member) => !!member)
-          .map((member, index) => _createMemberHtml(member, index, household.householdAllowedCount)).join(''),
-        '</ul>',
-        '</article>'
-      ].join('');
+      return {
+        title: `The ${household.householdName}`,
+        body: [
+          '<!-- wp:html -->',
+          '<div class="directory-household">',
+          `<img src="${household.householdImage}" alt="${household.householdName}"/>`,
+          '<ul>',
+          householdMembers
+            .filter((member) => !!member)
+            .map((member, index) => _createMemberHtml(member, index, household.householdAllowedCount)).join(''),
+          '</ul>',
+          '</div>',
+          '<!-- /wp:html -->',
+        ].join('')
+      };
     }
 
     function _transformPerson(id, peopleInfo) {
@@ -162,9 +166,18 @@
       });
 
       const householdInfo = householdData.map((household) => _transformHousehold(household, householdPeople));
-      const html = householdInfo.map((household) => _createHouseholdHtml(household)).join('');
+      const html = householdInfo.flatMap((household) => {
+        const { title, body } = _createHouseholdHtml(household);
 
-      document.getElementById('directory-body').innerHTML = html;
+        return [
+          '<li>',
+          `<textarea id="directory-title-${index}" readonly>${title}</textarea><button>Copy</button>`,
+          `<textarea id="directory-body-${index}" readonly>${body}</textarea><button>Copy</button>`,
+          '</li>'
+        ];
+      }).join('');
+
+      document.getElementById('directory-results').innerHTML = `<ul>${html}</ul>`;
     }
 
     function displayHouseholds() {
@@ -209,7 +222,11 @@
     });
   </script>
   <body>
-    <section id="directory-body"></section>
-    <section id="directory-nav"></section>
+    <section class="directory-controls">
+      <input id="directory-query"/>
+      <button>Query</button>
+    </section>
+    <section id="directory-results" class="directory-results">
+    </section>
   </body>
 </html>
