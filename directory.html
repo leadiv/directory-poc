@@ -3,6 +3,11 @@
     body > * + * {
       margin-top: 2rem;
     }
+
+    h1 {
+      text-align: center;
+    }
+
     section {
       max-width: 50rem;
       margin-left: auto;
@@ -28,6 +33,20 @@
     }
     .directory__body {
       grid-area: 2 / 1 / 6 / 5;
+    }
+
+    .directory__copy {
+      background-color: #008000;
+      color: white;
+      border: 1px solid darkgreen;
+      border-radius: 4px;
+
+      &:hover {
+        background-color: #00aa00;
+      }
+
+      &:active {
+        background-color: #00dd00;
     }
   </style>
   <script>
@@ -202,8 +221,8 @@
 
         return [
           '<li>',
-          `<textarea id="directory-title-${index}" class="directory__title" readonly>${title}</textarea><button data-for="directory-title-${index}">Copy</button>`,
-          `<textarea id="directory-body-${index}" class="directory__body" readonly>${body}</textarea><button data-for="directory-body-${index}">Copy</button>`,
+          `<textarea id="directory-title-${index}" class="directory__title" readonly>${title}</textarea><button class="directory__copy" data-for="directory-title-${index}">Copy</button>`,
+          `<textarea id="directory-body-${index}" class="directory__body" readonly>${body}</textarea><button class="directory__copy" data-for="directory-body-${index}">Copy</button>`,
           '</li>'
         ];
       }).join('');
