@@ -88,6 +88,10 @@
       return window.directoryPOC.apiRequest('https://api.planningcenteronline.com/people/v2/households?include=people&per_page=1');
     }
 
+    function fetchHouseholds(name) {
+      return window.directoryPOC.apiRequest(`https://api.planningcenteronline.com/people/v2/households?include=people&per_page=100&where[name]=${name}%25`);
+    }
+
     function _isIncludeInTheOnlinePictorialDirectoryField(fieldDatum) {
       const FIELD_DEFINITION_ID = '830513';
       const {
@@ -166,7 +170,7 @@
         title: `The ${household.householdName}`,
         body: [
           '<!-- wp:html -->',
-          '<div class="directory-household">',
+          `<div class="directory-household" data-id=${household.householdId}>`,
           `<img src="${household.householdImage}" alt="${household.householdName}"/>`,
           '<ul>',
           householdMembers
@@ -198,6 +202,7 @@
       const attributes = household.attributes;
 
       return {
+        householdId: household.id,
         householdImage: attributes.avatar,
         householdName: attributes.name,
         householdAllowedCount: peopleInfo.length,
@@ -239,6 +244,28 @@
       return Promise.all([householdJson, allowedPeople]).then(displayHousehold);
     }
 
+    function displayHouseholdsWithJson(householdJson) {
+      const allowedPeople = householdJson
+        .then((jsonResults) => getPeopleLinks(jsonResults))
+        .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest));
+
+      return Promise.all([householdJson, allowedPeople]).then(displayHousehold);
+    }
+
+    function queryHouseholds(query) {
+      return fetchHouseholds().then((householdJson) => {
+        return householdJson?.links?.next ? fetchHouseholds(householdJson.links.next).then(displayHouseholdsWithJson) : displayHouseholdsWithJson(householdJson);
+      });
+    }
+
+    const lookupHandlerFactory = (directoryQueryElement) => (clickEvent) => {
+      clickEvent.target.disabled = true;
+      queryHouseholds(directoryQueryElement.value).then(() => {
+        console.log('All households have been processed');
+        clickEvent.target.disabled = false;
+      })
+    };
+
     function startHere() {
 
       const authInfo = window.localStorage.getItem('directoryAuthInfo');
@@ -252,8 +279,6 @@
             MAX_RETRY: 3,
             apiRequest: requestPCO(access_token)
           };
-
-          displayHouseholds();
         } else {
 
           window.location.href = authRedirectUrl;
@@ -267,12 +292,14 @@
     document.addEventListener("DOMContentLoaded", (event) => {
       startHere();
     });
+
+    document.getElementById('directory-lookup').addEventListener('click', lookupHandlerFactory(document.getElementById('directory-query')));
   </script>
   <body>
     <h1>Directory Update Tool</h1>
     <section class="directory-controls">
       <input id="directory-query"/>
-      <button>Query</button>
+      <button id="directory-lookup">Look Up</button>
     </section>
     <section id="directory-results" class="directory-results">
     </section>
