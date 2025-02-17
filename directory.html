@@ -341,8 +341,8 @@
         const id = eventInfo.target?.dataset?.for;
 
         if (id) {
-          eventInfo.target.className.remove('copy-successful');
-          eventInfo.target.className.remove('copy-unsuccessful');
+          eventInfo.target.classList.remove('copy-successful');
+          eventInfo.target.classList.remove('copy-unsuccessful');
           copyTextToClipboard(document.getElementById(id).value).then(() => {
             eventInfo.target.classList.add('copy--successful');
           }).catch(() => {
