@@ -51,25 +51,22 @@
           background-color: #00dd00;
       }
 
-      .copy {
-        &:after {
-          font-weight: bold;
-          -webkit-text-stroke: 1px rgba(255, 255, 255, .6);
-        }
-
-        &--successful:after {
-          content: ' \2713';
-          font-size: 1rem;
-          color: rgba(0, 255, 0, 1);
-        }
-
-        &--unsuccessful:after {
-          content: ' \00D7';
-          font-size: 1.2rem;
-          color: rgba(255, 0, 0, 1);
-        }
+      .copy:after {
+        font-weight: bold;
+        -webkit-text-stroke: 1px rgba(255, 255, 255, .6);
       }
 
+      .copy--successful:after {
+        content: ' \2713';
+        font-size: 1rem;
+        color: rgba(0, 255, 0, 1);
+      }
+
+      .copy--unsuccessful:after {
+        content: ' \00D7';
+        font-size: 1.2rem;
+        color: rgba(255, 0, 0, 1);
+      }
     </style>
     <script>
       const tap = (getMessage) => (passThrough) => {
