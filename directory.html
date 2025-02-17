@@ -268,10 +268,14 @@
         });
       }
 
-      const lookupHandlerFactory = (directoryQueryElement) => (clickEvent) => {
+      const lookupHandlerFactory = (directoryQueryElement, directoryResults) => (clickEvent) => {
         clickEvent.target.disabled = true;
+        directoryResults.innerHTML = '';
         queryHouseholds(directoryQueryElement.value).then(() => {
           console.log('All households have been processed');
+          if (directoryResults.innerHTML === '') {
+            directoryResults.innerHTML = `No results found for ${directoryQueryElement.value}`;
+          }
           clickEvent.target.disabled = false;
         })
       };
@@ -301,7 +305,7 @@
 
       document.addEventListener("DOMContentLoaded", (event) => {
         checkAuth();
-        document.getElementById('directory-lookup').addEventListener('click', lookupHandlerFactory(document.getElementById('directory-query')));
+        document.getElementById('directory-lookup').addEventListener('click', lookupHandlerFactory(document.getElementById('directory-query'), document.getElementById('directory-results')));
       });
 
     </script>
