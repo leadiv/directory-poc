@@ -51,9 +51,11 @@
           background-color: #00dd00;
       }
 
-      .copy:after {
-        font-weight: bold;
-        -webkit-text-stroke: 1px rgba(255, 255, 255, .6);
+      .copy {
+        &:after {
+          font-weight: bold;
+          -webkit-text-stroke: 1px rgba(255, 255, 255, .6);
+        }
 
         &--successful:after {
           content: ' \2713';
