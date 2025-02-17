@@ -247,11 +247,10 @@
       }
 
       function displayHouseholdsWithJson(householdJson) {
-        const allowedPeople = householdJson
-          .then((jsonResults) => getPeopleLinks(jsonResults))
+        const allowedPeople = getPeopleLinks(householdJson)
           .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest));
 
-        return Promise.all([householdJson, allowedPeople]).then(displayHousehold);
+        return Promise.all([Promise.resolve(householdJson), allowedPeople]).then(displayHousehold);
       }
 
       function queryHouseholds(query) {
