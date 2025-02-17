@@ -73,7 +73,14 @@
           headers: {
             Authorization: `Bearer ${access_token}`
           }
-        }).then((response) => response.json()).catch((error) => {
+        })
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          }
+          throw new Error(`status code, ${response.status}, recieved from API request: ${apiEndpoint}`);
+        })
+        .catch((error) => {
           if (retryCount <= window.directoryPOC.MAX_RETRY) {
             return backoff(retryCount).then(() => window.directoryPOC.apiRequest(apiEndpoint, retryCount + 1));
           } else {
