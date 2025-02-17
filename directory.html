@@ -225,7 +225,7 @@
         const householdInfo = householdData.map((household) => _transformHousehold(household, householdPeople));
         const html = householdInfo
           .filter((household) => {
-            household.householdMembers.filter((member) => !!member).length > 0
+            return household.householdMembers.filter((member) => !!member).length > 0
           })
           .flatMap((household, index) => {
           const { title, body } = _createHouseholdHtml(household);
