@@ -244,7 +244,9 @@
           ];
         }).join('');
 
-        document.getElementById('directory-results').innerHTML = `<ul>${html}</ul>`;
+        if (html) {
+          document.getElementById('directory-results').innerHTML = `<ul>${html}</ul>`;
+        }
       }
 
       function displayHouseholds() {
