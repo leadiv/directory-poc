@@ -1,4 +1,4 @@
-<html>
+<!DOCTYPE html>
   <head>
     <link rel="shortcut icon" type="image/png" href="https://s3.amazonaws.com/media.cloversites.com/df/df215a8c-96d5-4f44-8fee-549745631403/favicons/1498510734-favicon.ico">
     <style>
@@ -79,14 +79,12 @@
           if (response.ok) {
             return response.json();
           }
-          throw new Error(`status code, ${response.status}, recieved from API request: ${apiEndpoint}`);
-        })
-        .catch((error) => {
-          if (retryCount <= window.directoryPOC.MAX_RETRY) {
+
+          if (response.status === 429 && retryCount <= window.directoryPOC.MAX_RETRY) {
             return backoff(retryCount).then(() => window.directoryPOC.apiRequest(apiEndpoint, retryCount + 1));
-          } else {
-            throw new Error(`MAX RETRY of ${window.directoryPOC.MAX_RETRY} has been reached. Stopping due to: ${error}`);
           }
+
+          throw new Error(`MAX RETRY of ${window.directoryPOC.MAX_RETRY} has been reached. Stopping due to: ${error}`);
         });
       }
 
