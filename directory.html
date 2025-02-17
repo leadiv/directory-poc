@@ -1,300 +1,303 @@
 <html>
-  <style>
-    body > * + * {
-      margin-top: 2rem;
-    }
-
-    h1 {
-      text-align: center;
-    }
-
-    section {
-      max-width: 50rem;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    ul {
-      margin: 0;
-      list-style-type: none;
-      padding:0;
-    }
-
-    li {
-      display: grid;
-      grid-template-rows: repeat(5, 2rem);
-      grid-template-columns: repeat(5, 1fr);
-      grid-column-gap: .75rem;
-      grid-row-gap: .75rem;
-    }
-
-    .directory__title {
-      grid-area: 1 / 1 / 2 / 5;
-    }
-    .directory__body {
-      grid-area: 2 / 1 / 6 / 5;
-    }
-
-    .directory__copy {
-      background-color: #008000;
-      color: white;
-      border: 1px solid darkgreen;
-      border-radius: 4px;
-
-      &:hover {
-        background-color: #00aa00;
+  <head>
+    <link rel="shortcut icon" type="image/png" href="https://s3.amazonaws.com/media.cloversites.com/df/df215a8c-96d5-4f44-8fee-549745631403/favicons/1498510734-favicon.ico">
+    <style>
+      body > * + * {
+        margin-top: 2rem;
       }
 
-      &:active {
-        background-color: #00dd00;
-    }
-  </style>
-  <script>
-    const tap = (getMessage) => (passThrough) => {
-      console.log(getMessage(passThrough));
+      h1 {
+        text-align: center;
+      }
 
-      return passThrough;
-    };
+      section {
+        max-width: 50rem;
+        margin-left: auto;
+        margin-right: auto;
+      }
 
-    const backoff = (retryCount) => {
-      return new Promise((resolve, reject) => {
-          const backoffTime = Math.floor(Math.random() * Math.pow(2, retryCount - 1) * 1000);
-        setTimeout(() => {
-          resolve(backoffTime);
-        }, backoffTime);
-      });
-    };
+      ul {
+        margin: 0;
+        list-style-type: none;
+        padding:0;
+      }
 
-    // PCO = Planning Center Online
-    const requestPCO = (access_token) => (apiEndpoint, retryCount = 1) => {
-      return fetch(apiEndpoint, {
-        headers: {
-          Authorization: `Bearer ${access_token}`
+      li {
+        display: grid;
+        grid-template-rows: repeat(5, 2rem);
+        grid-template-columns: repeat(5, 1fr);
+        grid-column-gap: .75rem;
+        grid-row-gap: .75rem;
+      }
+
+      .directory__title {
+        grid-area: 1 / 1 / 2 / 5;
+      }
+      .directory__body {
+        grid-area: 2 / 1 / 6 / 5;
+      }
+
+      .directory__copy {
+        background-color: #008000;
+        color: white;
+        border: 1px solid darkgreen;
+        border-radius: 4px;
+
+        &:hover {
+          background-color: #00aa00;
         }
-      }).then((response) => response.json()).catch((error) => {
-        if (retryCount <= window.directoryPOC.MAX_RETRY) {
-          return backoff(retryCount).then(() => window.directoryPOC.apiRequest(apiEndpoint, retryCount + 1));
-        } else {
-          throw new Error(`MAX RETRY of ${window.directoryPOC.MAX_RETRY} has been reached. Stopping due to: ${error}`);
-        }
-      });
-    }
 
-    function getPeopleLinks({ data }) {
-      return data.map(({ relationships: { people: { links: { related } } } }) => `${related}?include=field_data`);
-    }
+        &:active {
+          background-color: #00dd00;
+      }
+    </style>
+    <script>
+      const tap = (getMessage) => (passThrough) => {
+        console.log(getMessage(passThrough));
 
-    function requestFirstPageOfHouseholds() {
-      return window.directoryPOC.apiRequest('https://api.planningcenteronline.com/people/v2/households?include=people&per_page=1');
-    }
+        return passThrough;
+      };
 
-    function fetchHouseholds(name) {
-      return window.directoryPOC.apiRequest(`https://api.planningcenteronline.com/people/v2/households?include=people&per_page=100&where[name]=${name}%25`);
-    }
-
-    function _isIncludeInTheOnlinePictorialDirectoryField(fieldDatum) {
-      const FIELD_DEFINITION_ID = '830513';
-      const {
-        relationships: {
-          customizable: {
-            data: {
-              type: customizableType
-            }
-          },
-          field_definition: {
-            data: {
-              id,
-              type: fieldDefinitionType
-            }
-          }
-        }
-      } = fieldDatum;
-
-      return customizableType === 'Person' && fieldDefinitionType === 'FieldDefinition' && id === FIELD_DEFINITION_ID;
-    }
-
-    function _getPersonIdFromFieldDatum(fieldDatum) {
-      const {
-        relationships: {
-          customizable: {
-            data: {
-              id
-            }
-          }
-        }
-      } = fieldDatum;
-
-      return id;
-    }
-
-    function _getAllowedPeople({ included }) {
-      return included
-        .filter(_isIncludeInTheOnlinePictorialDirectoryField)
-        .map(_getPersonIdFromFieldDatum);
-    }
-
-    function getAllowedPeopleList(apiLinks, apiCall) {
-      return Promise.all(apiLinks.map((apiLink) => {
-        return apiCall(apiLink).catch((error) => {
-          console.warn(`caught this error while trying to reach ${apiLink}. A null will be return as the result. Should look into why this error is happening ${error}`);
-          return null;
+      const backoff = (retryCount) => {
+        return new Promise((resolve, reject) => {
+            const backoffTime = Math.floor(Math.random() * Math.pow(2, retryCount - 1) * 1000);
+          setTimeout(() => {
+            resolve(backoffTime);
+          }, backoffTime);
         });
-      })).then((results) => {
-        return results
-          .filter((item) => item !== null)
-          .flatMap(_getAllowedPeople)
-      });
-    }
-
-    function _shouldUseSeparator(index, total) {
-      return (total > 1) && (index !== total -1);
-    }
-
-    function _createMemberHtml(member, index, totalHousehold) {
-      const separator = _shouldUseSeparator(index, totalHousehold) ? ',' : '';
-
-      return [
-        '<li>',
-        `<img src="${member.avatar}" alt="${member.name}"/>`,
-        '<span>',
-        member.name,
-        `</span>${separator}`,
-        '</li>'
-      ].join('');
-    }
-
-    function _createHouseholdHtml(household) {
-      const householdMembers = household?.householdMembers || [];
-
-      return {
-        title: `The ${household.householdName}`,
-        body: [
-          '<!-- wp:html -->',
-          `<div class="directory-household" data-id=${household.householdId}>`,
-          `<img src="${household.householdImage}" alt="${household.householdName}"/>`,
-          '<ul>',
-          householdMembers
-            .filter((member) => !!member)
-            .map((member, index) => _createMemberHtml(member, index, household.householdAllowedCount)).join(''),
-          '</ul>',
-          '</div>',
-          '<!-- /wp:html -->',
-        ].join('')
       };
-    }
 
-    function _transformPerson(id, peopleInfo) {
-      const personFound = peopleInfo.find((info) => info.id === id);
-
-      try {
-        const attributes = personFound.attributes;
-
-        return {
-          avatar: attributes.avatar,
-          name: attributes.name
-        };
-      } catch(error) {
-        return null;
+      // PCO = Planning Center Online
+      const requestPCO = (access_token) => (apiEndpoint, retryCount = 1) => {
+        return fetch(apiEndpoint, {
+          headers: {
+            Authorization: `Bearer ${access_token}`
+          }
+        }).then((response) => response.json()).catch((error) => {
+          if (retryCount <= window.directoryPOC.MAX_RETRY) {
+            return backoff(retryCount).then(() => window.directoryPOC.apiRequest(apiEndpoint, retryCount + 1));
+          } else {
+            throw new Error(`MAX RETRY of ${window.directoryPOC.MAX_RETRY} has been reached. Stopping due to: ${error}`);
+          }
+        });
       }
-    }
 
-    function _transformHousehold(household, peopleInfo) {
-      const attributes = household.attributes;
+      function getPeopleLinks({ data }) {
+        return data.map(({ relationships: { people: { links: { related } } } }) => `${related}?include=field_data`);
+      }
 
-      return {
-        householdId: household.id,
-        householdImage: attributes.avatar,
-        householdName: attributes.name,
-        householdAllowedCount: peopleInfo.length,
-        householdMembers: household.relationships.people.data
-          .filter((personRef) => personRef.type === 'Person')
-          .map((personRef) => {
-            return _transformPerson(personRef.id, peopleInfo);
-          })
-      };
-    }
+      function requestFirstPageOfHouseholds() {
+        return window.directoryPOC.apiRequest('https://api.planningcenteronline.com/people/v2/households?include=people&per_page=1');
+      }
 
-    function displayHousehold([ householdJson, allowedPeople ]) {
-      const householdData = householdJson.data || [];
-      const householdPeople = householdJson.included.filter((person) => {
-        return !!allowedPeople.find((allowed) => allowed === person.id)
-      });
+      function fetchHouseholds(name) {
+        return window.directoryPOC.apiRequest(`https://api.planningcenteronline.com/people/v2/households?include=people&per_page=100&where[name]=${name}%25`);
+      }
 
-      const householdInfo = householdData.map((household) => _transformHousehold(household, householdPeople));
-      const html = householdInfo.flatMap((household, index) => {
-        const { title, body } = _createHouseholdHtml(household);
+      function _isIncludeInTheOnlinePictorialDirectoryField(fieldDatum) {
+        const FIELD_DEFINITION_ID = '830513';
+        const {
+          relationships: {
+            customizable: {
+              data: {
+                type: customizableType
+              }
+            },
+            field_definition: {
+              data: {
+                id,
+                type: fieldDefinitionType
+              }
+            }
+          }
+        } = fieldDatum;
+
+        return customizableType === 'Person' && fieldDefinitionType === 'FieldDefinition' && id === FIELD_DEFINITION_ID;
+      }
+
+      function _getPersonIdFromFieldDatum(fieldDatum) {
+        const {
+          relationships: {
+            customizable: {
+              data: {
+                id
+              }
+            }
+          }
+        } = fieldDatum;
+
+        return id;
+      }
+
+      function _getAllowedPeople({ included }) {
+        return included
+          .filter(_isIncludeInTheOnlinePictorialDirectoryField)
+          .map(_getPersonIdFromFieldDatum);
+      }
+
+      function getAllowedPeopleList(apiLinks, apiCall) {
+        return Promise.all(apiLinks.map((apiLink) => {
+          return apiCall(apiLink).catch((error) => {
+            console.warn(`caught this error while trying to reach ${apiLink}. A null will be return as the result. Should look into why this error is happening ${error}`);
+            return null;
+          });
+        })).then((results) => {
+          return results
+            .filter((item) => item !== null)
+            .flatMap(_getAllowedPeople)
+        });
+      }
+
+      function _shouldUseSeparator(index, total) {
+        return (total > 1) && (index !== total -1);
+      }
+
+      function _createMemberHtml(member, index, totalHousehold) {
+        const separator = _shouldUseSeparator(index, totalHousehold) ? ',' : '';
 
         return [
           '<li>',
-          `<textarea id="directory-title-${index}" class="directory__title" readonly>${title}</textarea><button class="directory__copy" data-for="directory-title-${index}">Copy</button>`,
-          `<textarea id="directory-body-${index}" class="directory__body" readonly>${body}</textarea><button class="directory__copy" data-for="directory-body-${index}">Copy</button>`,
+          `<img src="${member.avatar}" alt="${member.name}"/>`,
+          '<span>',
+          member.name,
+          `</span>${separator}`,
           '</li>'
-        ];
-      }).join('');
+        ].join('');
+      }
 
-      document.getElementById('directory-results').innerHTML = `<ul>${html}</ul>`;
-    }
+      function _createHouseholdHtml(household) {
+        const householdMembers = household?.householdMembers || [];
 
-    function displayHouseholds() {
-      const householdJson = requestFirstPageOfHouseholds();
-      const allowedPeople = householdJson
-        .then((jsonResults) => getPeopleLinks(jsonResults))
-        .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest));
+        return {
+          title: `The ${household.householdName}`,
+          body: [
+            '<!-- wp:html -->',
+            `<div class="directory-household" data-id=${household.householdId}>`,
+            `<img src="${household.householdImage}" alt="${household.householdName}"/>`,
+            '<ul>',
+            householdMembers
+              .filter((member) => !!member)
+              .map((member, index) => _createMemberHtml(member, index, household.householdAllowedCount)).join(''),
+            '</ul>',
+            '</div>',
+            '<!-- /wp:html -->',
+          ].join('')
+        };
+      }
 
-      return Promise.all([householdJson, allowedPeople]).then(displayHousehold);
-    }
+      function _transformPerson(id, peopleInfo) {
+        const personFound = peopleInfo.find((info) => info.id === id);
 
-    function displayHouseholdsWithJson(householdJson) {
-      const allowedPeople = householdJson
-        .then((jsonResults) => getPeopleLinks(jsonResults))
-        .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest));
+        try {
+          const attributes = personFound.attributes;
 
-      return Promise.all([householdJson, allowedPeople]).then(displayHousehold);
-    }
-
-    function queryHouseholds(query) {
-      return fetchHouseholds().then((householdJson) => {
-        return householdJson?.links?.next ? fetchHouseholds(householdJson.links.next).then(displayHouseholdsWithJson) : displayHouseholdsWithJson(householdJson);
-      });
-    }
-
-    const lookupHandlerFactory = (directoryQueryElement) => (clickEvent) => {
-      clickEvent.target.disabled = true;
-      queryHouseholds(directoryQueryElement.value).then(() => {
-        console.log('All households have been processed');
-        clickEvent.target.disabled = false;
-      })
-    };
-
-    function checkAuth() {
-
-      const authInfo = window.localStorage.getItem('directoryAuthInfo');
-      const authRedirectUrl = "https://api.planningcenteronline.com/oauth/authorize?client_id=1c60b5f9c9c37feedbbfe34ac0014b2b4f17ebfb71cd44bc6b702fd1ecec9d9f&redirect_uri=https://leadiv.github.io/directory-poc/auth-complete&response_type=code&scope=people";
-      if (authInfo) {
-
-        const { access_token, expires_in, created_at } = JSON.parse(authInfo);
-
-        if (((created_at + expires_in - 300) * 1000) > Date.now()) {
-          window.directoryPOC = {
-            MAX_RETRY: 3,
-            apiRequest: requestPCO(access_token)
+          return {
+            avatar: attributes.avatar,
+            name: attributes.name
           };
+        } catch(error) {
+          return null;
+        }
+      }
+
+      function _transformHousehold(household, peopleInfo) {
+        const attributes = household.attributes;
+
+        return {
+          householdId: household.id,
+          householdImage: attributes.avatar,
+          householdName: attributes.name,
+          householdAllowedCount: peopleInfo.length,
+          householdMembers: household.relationships.people.data
+            .filter((personRef) => personRef.type === 'Person')
+            .map((personRef) => {
+              return _transformPerson(personRef.id, peopleInfo);
+            })
+        };
+      }
+
+      function displayHousehold([ householdJson, allowedPeople ]) {
+        const householdData = householdJson.data || [];
+        const householdPeople = householdJson.included.filter((person) => {
+          return !!allowedPeople.find((allowed) => allowed === person.id)
+        });
+
+        const householdInfo = householdData.map((household) => _transformHousehold(household, householdPeople));
+        const html = householdInfo.flatMap((household, index) => {
+          const { title, body } = _createHouseholdHtml(household);
+
+          return [
+            '<li>',
+            `<textarea id="directory-title-${index}" class="directory__title" readonly>${title}</textarea><button class="directory__copy" data-for="directory-title-${index}">Copy</button>`,
+            `<textarea id="directory-body-${index}" class="directory__body" readonly>${body}</textarea><button class="directory__copy" data-for="directory-body-${index}">Copy</button>`,
+            '</li>'
+          ];
+        }).join('');
+
+        document.getElementById('directory-results').innerHTML = `<ul>${html}</ul>`;
+      }
+
+      function displayHouseholds() {
+        const householdJson = requestFirstPageOfHouseholds();
+        const allowedPeople = householdJson
+          .then((jsonResults) => getPeopleLinks(jsonResults))
+          .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest));
+
+        return Promise.all([householdJson, allowedPeople]).then(displayHousehold);
+      }
+
+      function displayHouseholdsWithJson(householdJson) {
+        const allowedPeople = householdJson
+          .then((jsonResults) => getPeopleLinks(jsonResults))
+          .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest));
+
+        return Promise.all([householdJson, allowedPeople]).then(displayHousehold);
+      }
+
+      function queryHouseholds(query) {
+        return fetchHouseholds().then((householdJson) => {
+          return householdJson?.links?.next ? fetchHouseholds(householdJson.links.next).then(displayHouseholdsWithJson) : displayHouseholdsWithJson(householdJson);
+        });
+      }
+
+      const lookupHandlerFactory = (directoryQueryElement) => (clickEvent) => {
+        clickEvent.target.disabled = true;
+        queryHouseholds(directoryQueryElement.value).then(() => {
+          console.log('All households have been processed');
+          clickEvent.target.disabled = false;
+        })
+      };
+
+      function checkAuth() {
+
+        const authInfo = window.localStorage.getItem('directoryAuthInfo');
+        const authRedirectUrl = "https://api.planningcenteronline.com/oauth/authorize?client_id=1c60b5f9c9c37feedbbfe34ac0014b2b4f17ebfb71cd44bc6b702fd1ecec9d9f&redirect_uri=https://leadiv.github.io/directory-poc/auth-complete&response_type=code&scope=people";
+        if (authInfo) {
+
+          const { access_token, expires_in, created_at } = JSON.parse(authInfo);
+
+          if (((created_at + expires_in - 300) * 1000) > Date.now()) {
+            window.directoryPOC = {
+              MAX_RETRY: 3,
+              apiRequest: requestPCO(access_token)
+            };
+          } else {
+
+            window.location.href = authRedirectUrl;
+          }
         } else {
 
           window.location.href = authRedirectUrl;
         }
-      } else {
-
-        window.location.href = authRedirectUrl;
       }
-    }
 
-    document.addEventListener("DOMContentLoaded", (event) => {
-      checkAuth();
-      document.getElementById('directory-lookup').addEventListener('click', lookupHandlerFactory(document.getElementById('directory-query')));
-    });
+      document.addEventListener("DOMContentLoaded", (event) => {
+        checkAuth();
+        document.getElementById('directory-lookup').addEventListener('click', lookupHandlerFactory(document.getElementById('directory-query')));
+      });
 
-  </script>
+    </script>
+  </head>
   <body>
     <h1>Directory Update Tool</h1>
     <section class="directory-controls">
