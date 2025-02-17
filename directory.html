@@ -253,8 +253,8 @@
       }
 
       function queryHouseholds(query) {
-        return fetchHouseholds().then((householdJson) => {
-          return householdJson?.links?.next ? fetchHouseholds(householdJson.links.next).then(displayHouseholdsWithJson) : displayHouseholdsWithJson(householdJson);
+        return fetchHouseholds(query).then((householdJson) => {
+          return householdJson?.links?.next ? window.directoryPOC.apiRequest(householdJson.links.next).then(displayHouseholdsWithJson) : displayHouseholdsWithJson(householdJson);
         });
       }
 
