@@ -97,7 +97,7 @@
       }
 
       function fetchHouseholds(name) {
-        return window.directoryPOC.apiRequest(`https://api.planningcenteronline.com/people/v2/households?include=people&per_page=100&where[name]=${name}%25`);
+        return window.directoryPOC.apiRequest(`https://api.planningcenteronline.com/people/v2/households?include=people&per_page=100&where[name]=${name} %25`);
       }
 
       function _isIncludeInTheOnlinePictorialDirectoryField(fieldDatum) {
