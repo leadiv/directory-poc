@@ -60,7 +60,8 @@
 
       const backoff = (retryCount) => {
         return new Promise((resolve, reject) => {
-            const backoffTime = Math.floor(Math.random() * Math.pow(2, retryCount - 1) * 1000);
+            const twentySeconds = 20 * 1000;
+            const backoffTime = Math.floor(Math.random() * Math.pow(2, retryCount - 1) * twentySeconds);
           setTimeout(() => {
             resolve(backoffTime);
           }, backoffTime);
