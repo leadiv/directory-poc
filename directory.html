@@ -374,7 +374,7 @@
 
       document.addEventListener("DOMContentLoaded", (event) => {
         checkAuth();
-        document.getElementById('directory-lookup').addEventListener('click', lookupHandlerFactory(document.getElementById('directory-query'), document.getElementById('directory-results')));
+        document.getElementById('directory-query-form').addEventListener('submit', lookupHandlerFactory(document.getElementById('directory-query'), document.getElementById('directory-results')));
         document.addEventListener('click', handleCopy);
       });
 
@@ -383,8 +383,10 @@
   <body>
     <h1>Directory Update Tool</h1>
     <section class="directory-controls">
-      <input id="directory-query"/>
-      <button id="directory-lookup">Look Up</button>
+      <form id="directory-query-form">
+        <input id="directory-query"/>
+        <button id="directory-lookup" type="submit">Look Up</button>
+      </form>
     </section>
     <section id="directory-results" class="directory-results">
     </section>
