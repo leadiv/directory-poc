@@ -291,6 +291,8 @@
       const lookupHandlerFactory = (directoryQueryElement, directoryResults) => (clickEvent) => {
         clickEvent.target.disabled = true;
         directoryResults.innerHTML = '';
+
+        clickEvent.stopPropagation();
         queryHouseholds(directoryQueryElement.value).then(() => {
           console.log('All households have been processed');
           if (directoryResults.innerHTML === '') {
