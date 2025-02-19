@@ -293,6 +293,7 @@
         directoryResults.innerHTML = '';
 
         clickEvent.stopPropagation();
+        clickEvent.preventDefault();
         queryHouseholds(directoryQueryElement.value).then(() => {
           console.log('All households have been processed');
           if (directoryResults.innerHTML === '') {
