@@ -1,89 +1,397 @@
-<html>
-  <script>
-    const requestPeople = (access_token) => (apiEndpoint) => {
-      return fetch(apiEndpoint, {
-        headers: {
-          Authorization: `Bearer ${access_token}`
+<!DOCTYPE html>
+  <head>
+    <link rel="shortcut icon" type="image/png" href="https://s3.amazonaws.com/media.cloversites.com/df/df215a8c-96d5-4f44-8fee-549745631403/favicons/1498510734-favicon.ico">
+    <style>
+      body > * + * {
+        margin-top: 2rem;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      section {
+        max-width: 50rem;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      ul {
+        margin: 0;
+        list-style-type: none;
+        padding:0;
+      }
+
+      li {
+        display: grid;
+        grid-template-rows: repeat(5, 2rem);
+        grid-template-columns: repeat(5, 1fr);
+        grid-column-gap: .75rem;
+        grid-row-gap: .75rem;
+      }
+
+      .directory__title {
+        grid-area: 1 / 1 / 2 / 5;
+      }
+      .directory__body {
+        grid-area: 2 / 1 / 6 / 5;
+      }
+
+      .directory__copy {
+        background-color: #008000;
+        color: white;
+        border: 1px solid darkgreen;
+        border-radius: 4px;
+
+        &:hover {
+          background-color: #00aa00;
         }
-      }).then((response) => response.json());
-    }
 
-    function downloadNextPage(nextEndpoint) {
-      const directory = document.getElementById('directory-body');
+        &:active {
+          background-color: #00dd00;
+        }
+      }
 
-      window.directoryPOC.apiRequest(nextEndpoint).then(({ links, data, included }) => {
-        data.forEach(({ attributes, relationships }) => {
-          const name = attributes.name;
-          const picture = attributes.avatar;
-          const address = relationships.addresses.data.map((item) => {
-            const { city, state, street, zip } = included.find((x) => x.id === item.id).attributes;
+      .copy:after {
+        font-weight: bold;
+        -webkit-text-stroke: 1px rgba(255, 255, 255, .6);
+      }
 
-            return `${street}, ${city}, ${state} ${zip}`; 
-          });
-          const email = relationships.emails.data.map((email) => {
-            const { address } = included.find((x) => x.id === email.id).attributes;
+      .copy--successful:after {
+        content: ' \2713';
+        font-size: 1rem;
+        color: rgba(0, 255, 0, 1);
+      }
 
-            return address;
-          });
-          const phoneNumber = relationships.phone_numbers.data.map((phoneNumber) => {
-            const { number } = included.find((x) => x.id === phoneNumber.id).attributes;
+      .copy--unsuccessful:after {
+        content: ' \00D7';
+        font-size: 1.2rem;
+        color: rgba(255, 0, 0, 1);
+      }
+    </style>
+    <script>
+      const tap = (getMessage) => (passThrough) => {
+        console.log(getMessage(passThrough));
 
-            return number;
-          });
+        return passThrough;
+      };
 
-          directory.innerHTML += `
-            <ul>
-              <li>name: ${name}</li>
-              <li>picture: ${picture}</li>
-              <li>address: ${address}</li>
-              <li>email: ${email}</li>
-              <li>phone number: ${phoneNumber}</li>
-            </ul>
-          `;
+      const backoff = (retryCount) => {
+        return new Promise((resolve, reject) => {
+            const twentySeconds = 20 * 1000;
+            const backoffTime = Math.floor(Math.random() * Math.pow(2, retryCount - 1) * twentySeconds);
+          setTimeout(() => {
+            resolve(backoffTime);
+          }, backoffTime);
+        });
+      };
+
+      // PCO = Planning Center Online
+      const requestPCO = (access_token) => (apiEndpoint, retryCount = 1) => {
+        return fetch(apiEndpoint, {
+          headers: {
+            Authorization: `Bearer ${access_token}`
+          }
         })
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          }
 
-        const nav = document.getElementById('directory-nav');
-        nav.innerHTML = '<ul>';
+          if (response.status === 429 && retryCount <= window.directoryPOC.MAX_RETRY) {
+            return backoff(retryCount).then(() => window.directoryPOC.apiRequest(apiEndpoint, retryCount + 1));
+          }
 
-        if (links.next) {
-          nav.innerHTML += `<li><a href="javascript:downloadNextPage('${links.next}')">Next</a></li>`
-        }
+          throw new Error(`MAX RETRY of ${window.directoryPOC.MAX_RETRY} has been reached. Stopping due to: ${error}`);
+        });
+      }
 
-        nav.innerHTML += '</ul>';
-      });
-    }
+      function getPeopleLinks({ data }) {
+        return data.map(({ relationships: { people: { links: { related } } } }) => `${related}?include=field_data`);
+      }
 
-    function startHere() {
+      function requestFirstPageOfHouseholds() {
+        return window.directoryPOC.apiRequest('https://api.planningcenteronline.com/people/v2/households?include=people&per_page=1');
+      }
 
-      const authInfo = window.localStorage.getItem('directoryAuthInfo');
-      const authRedirectUrl = "https://api.planningcenteronline.com/oauth/authorize?client_id=1c60b5f9c9c37feedbbfe34ac0014b2b4f17ebfb71cd44bc6b702fd1ecec9d9f&redirect_uri=https://leadiv.github.io/directory-poc/auth-complete&response_type=code&scope=people";
-      if (authInfo) {
+      function fetchHouseholds(name) {
+        return window.directoryPOC.apiRequest(`https://api.planningcenteronline.com/people/v2/households?include=people&per_page=100&where[name]=${name} %25`);
+      }
 
-        const { access_token, expires_in, created_at } = JSON.parse(authInfo);
+      function _isIncludeInTheOnlinePictorialDirectoryField(fieldDatum) {
+        const FIELD_DEFINITION_ID = '830513';
+        const {
+          relationships: {
+            customizable: {
+              data: {
+                type: customizableType
+              }
+            },
+            field_definition: {
+              data: {
+                id,
+                type: fieldDefinitionType
+              }
+            }
+          }
+        } = fieldDatum;
 
-        if (((created_at + expires_in - 300) * 1000) > Date.now()) {
-          window.directoryPOC = {
-            apiRequest: requestPeople(access_token)
+        return customizableType === 'Person' && fieldDefinitionType === 'FieldDefinition' && id === FIELD_DEFINITION_ID;
+      }
+
+      function _getPersonIdFromFieldDatum(fieldDatum) {
+        const {
+          relationships: {
+            customizable: {
+              data: {
+                id
+              }
+            }
+          }
+        } = fieldDatum;
+
+        return id;
+      }
+
+      function _getAllowedPeople({ included }) {
+        return included
+          .filter(_isIncludeInTheOnlinePictorialDirectoryField)
+          .map(_getPersonIdFromFieldDatum);
+      }
+
+      function getAllowedPeopleList(apiLinks, apiCall) {
+        return Promise.all(apiLinks.map((apiLink) => {
+          return apiCall(apiLink).catch((error) => {
+            console.warn(`caught this error while trying to reach ${apiLink}. A null will be return as the result. Should look into why this error is happening ${error}`);
+            return null;
+          });
+        })).then((results) => {
+          return results
+            .filter((item) => item !== null)
+            .flatMap(_getAllowedPeople)
+        });
+      }
+
+      function _shouldUseSeparator(index, total) {
+        return (total > 1) && (index !== total -1);
+      }
+
+      function _createMemberHtml(member, index, totalHousehold) {
+        const separator = _shouldUseSeparator(index, totalHousehold) ? ',' : '';
+
+        return [
+          '<li>',
+          `<img src="${member.avatar}" alt="${member.name}"/>`,
+          '<span>',
+          member.name,
+          `</span>${separator}`,
+          '</li>'
+        ].join('');
+      }
+
+      function _createHouseholdHtml(household) {
+        const householdMembers = household?.householdMembers || [];
+
+        return {
+          title: `The ${household.householdName}`,
+          body: [
+            '<!-- wp:html -->',
+            `<div class="directory-household" data-id=${household.householdId}>`,
+            `<img src="${household.householdImage}" alt="${household.householdName}"/>`,
+            '<ul>',
+            householdMembers
+              .filter((member) => !!member)
+              .map((member, index) => _createMemberHtml(member, index, household.householdAllowedCount)).join(''),
+            '</ul>',
+            '</div>',
+            '<!-- /wp:html -->',
+          ].join('')
+        };
+      }
+
+      function _transformPerson(id, peopleInfo) {
+        const personFound = peopleInfo.find((info) => info.id === id);
+
+        try {
+          const attributes = personFound.attributes;
+
+          return {
+            avatar: attributes.avatar,
+            name: attributes.name
           };
+        } catch(error) {
+          return null;
+        }
+      }
 
-          downloadNextPage('https://api.planningcenteronline.com/people/v2/people?include=addresses,emails,phone_numbers&per_page=100');
+      function _transformHousehold(household, peopleInfo) {
+        const attributes = household.attributes;
+
+        return {
+          householdId: household.id,
+          householdImage: attributes.avatar,
+          householdName: attributes.name,
+          householdAllowedCount: peopleInfo.length,
+          householdMembers: household.relationships.people.data
+            .filter((personRef) => personRef.type === 'Person')
+            .map((personRef) => {
+              return _transformPerson(personRef.id, peopleInfo);
+            })
+        };
+      }
+
+      function displayHousehold([ householdJson, allowedPeople ]) {
+        const householdData = householdJson.data || [];
+        const householdPeople = householdJson.included.filter((person) => {
+          return !!allowedPeople.find((allowed) => allowed === person.id)
+        });
+
+        const householdInfo = householdData.map((household) => _transformHousehold(household, householdPeople));
+        const html = householdInfo
+          .filter((household) => {
+            return household.householdMembers.filter((member) => !!member).length > 0
+          })
+          .flatMap((household, index) => {
+          const { title, body } = _createHouseholdHtml(household);
+
+          return [
+            '<li>',
+            `<textarea id="directory-title-${index}" class="directory__title" readonly>${title}</textarea><button class="directory__copy" data-for="directory-title-${index}">Copy</button>`,
+            `<textarea id="directory-body-${index}" class="directory__body" readonly>${body}</textarea><button class="directory__copy" data-for="directory-body-${index}">Copy</button>`,
+            '</li>'
+          ];
+        }).join('');
+
+        if (html) {
+          document.getElementById('directory-results').innerHTML = `<ul>${html}</ul>`;
+        }
+      }
+
+      function displayHouseholds() {
+        const householdJson = requestFirstPageOfHouseholds();
+        const allowedPeople = householdJson
+          .then((jsonResults) => getPeopleLinks(jsonResults))
+          .then((peopleApiLinks) => getAllowedPeopleList(peopleApiLinks, window.directoryPOC.apiRequest));
+
+        return Promise.all([householdJson, allowedPeople]).then(displayHousehold);
+      }
+
+      function displayHouseholdsWithJson(householdJson) {
+        const allowedPeople = getAllowedPeopleList(getPeopleLinks(householdJson), window.directoryPOC.apiRequest);
+
+        return Promise.all([Promise.resolve(householdJson), allowedPeople]).then(displayHousehold);
+      }
+
+      function queryHouseholds(query) {
+        return fetchHouseholds(query).then((householdJson) => {
+          return householdJson?.links?.next ? window.directoryPOC.apiRequest(householdJson.links.next).then(displayHouseholdsWithJson) : displayHouseholdsWithJson(householdJson);
+        });
+      }
+
+      const lookupHandlerFactory = (directoryQueryElement, directoryResults) => (clickEvent) => {
+        clickEvent.target.disabled = true;
+        directoryResults.innerHTML = '';
+
+        clickEvent.stopPropagation();
+        clickEvent.preventDefault();
+        queryHouseholds(directoryQueryElement.value).then(() => {
+          console.log('All households have been processed');
+          if (directoryResults.innerHTML === '') {
+            directoryResults.innerHTML = `No results found for ${directoryQueryElement.value}`;
+          }
+          clickEvent.target.disabled = false;
+        })
+      };
+
+      function checkAuth() {
+
+        const authInfo = window.localStorage.getItem('directoryAuthInfo');
+        const authRedirectUrl = "https://api.planningcenteronline.com/oauth/authorize?client_id=1c60b5f9c9c37feedbbfe34ac0014b2b4f17ebfb71cd44bc6b702fd1ecec9d9f&redirect_uri=https://leadiv.github.io/directory-poc/auth-complete&response_type=code&scope=people";
+        if (authInfo) {
+
+          const { access_token, expires_in, created_at } = JSON.parse(authInfo);
+
+          if (((created_at + expires_in - 300) * 1000) > Date.now()) {
+            window.directoryPOC = {
+              MAX_RETRY: 3,
+              apiRequest: requestPCO(access_token)
+            };
+          } else {
+
+            window.location.href = authRedirectUrl;
+          }
         } else {
 
           window.location.href = authRedirectUrl;
         }
-      } else {
-
-        window.location.href = authRedirectUrl;
       }
-    }
 
-    document.addEventListener("DOMContentLoaded", (event) => {
-      startHere();
-    });
-  </script>
+      function fallbackCopyTextToClipboard(text) {
+        const textArea = document.createElement("textarea");
+        let successful = false;
+
+        textArea.value = text;
+
+        // Avoid scrolling to bottom
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.position = "fixed";
+
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          successful = document.execCommand('copy');
+
+          console.log('Fallback: Copying text command was ', successful ? 'successful' : 'unsuccessful');
+        } catch (err) {
+          console.error('Fallback: Oops, unable to copy', err);
+        }
+
+        document.body.removeChild(textArea);
+
+        return successful ? Promise.resolve(successful) : Promise.reject(successful);
+      }
+
+      function copyTextToClipboard(text) {
+        return (navigator.clipboard) ? navigator.clipboard.writeText(text) : fallbackCopyTextToClipboard(text);
+      }
+
+      function handleCopy(eventInfo) {
+        const id = eventInfo.target?.dataset?.for;
+
+        if (id) {
+          eventInfo.target.classList.remove('copy');
+          eventInfo.target.classList.remove('copy-successful');
+          eventInfo.target.classList.remove('copy-unsuccessful');
+          copyTextToClipboard(document.getElementById(id).value).then(() => {
+            eventInfo.target.classList.add('copy--successful');
+            eventInfo.target.classList.add('copy');
+          }).catch(() => {
+            eventInfo.target.classList.add('copy--unsuccessful');
+            eventInfo.target.classList.add('copy');
+          })
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", (event) => {
+        checkAuth();
+        document.getElementById('directory-query-form').addEventListener('submit', lookupHandlerFactory(document.getElementById('directory-query'), document.getElementById('directory-results')));
+        document.addEventListener('click', handleCopy);
+      });
+
+    </script>
+  </head>
   <body>
-    <h1>The directory</h1>
-    <section id="directory-body"></section>
-    <section id="directory-nav"></section>
+    <h1>Directory Update Tool</h1>
+    <section class="directory-controls">
+      <form id="directory-query-form" action="" method="get">
+        <input id="directory-query" name="query"/>
+        <button id="directory-lookup" type="submit">Look Up</button>
+      </form>
+    </section>
+    <section id="directory-results" class="directory-results">
+    </section>
   </body>
 </html>
